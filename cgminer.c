@@ -58,6 +58,7 @@ char *curly = ":D";
 #include "driver-opencl.h"
 #include "bench_block.h"
 #include "scrypt.h"
+#include "keccak.h"
 #ifdef USE_USBUTILS
 #include "usbutils.h"
 #endif
@@ -117,6 +118,9 @@ int opt_g_threads = -1;
 int gpu_threads;
 #ifdef USE_SCRYPT
 bool opt_scrypt;
+#endif
+#ifdef USE_KECCAK
+bool opt_keccak;
 #endif
 #endif
 bool opt_restart = true;
@@ -1357,6 +1361,11 @@ static struct opt_table opt_config_table[] = {
 		     set_shaders, NULL, NULL,
 		     "GPU shaders per card for tuning scrypt, comma separated"),
 #endif
+#ifdef USE_KECCAK
+	OPT_WITHOUT_ARG("--keccak",
+			opt_set_bool, &opt_keccak,
+			"Use the keccak algorithm for mining (copperlark only)"),
+#endif
 	OPT_WITH_ARG("--sharelog",
 		     set_sharelog, NULL, NULL,
 		     "Append share log to file"),
@@ -1608,6 +1617,9 @@ static char *opt_verusage_and_exit(const char *extra)
 #endif
 #ifdef USE_SCRYPT
 		"scrypt "
+#endif
+#ifdef USE_KECCAK
+		"keccak "
 #endif
 		"mining support.\n"
 		, packagename);
@@ -2008,10 +2020,17 @@ static bool gbt_decode(struct pool *pool, json_t *res_val)
 
 static bool getwork_decode(json_t *res_val, struct work *work)
 {
+#ifdef USE_KECCAK
+	if (unlikely(!jobj_binary(res_val, "data", work->data, opt_keccak ? 80 : sizeof(work->data), true))) {
+		applog(LOG_ERR, "JSON inval data");
+		return false;
+	}
+#else
 	if (unlikely(!jobj_binary(res_val, "data", work->data, sizeof(work->data), true))) {
 		applog(LOG_ERR, "JSON inval data");
 		return false;
 	}
+#endif
 
 	if (!jobj_binary(res_val, "midstate", work->midstate, sizeof(work->midstate), false)) {
 		// Calculate it ourselves
@@ -2705,7 +2724,11 @@ static bool submit_upstream_work(struct work *work, CURL *curl, bool resubmit)
 	endian_flip128(work->data, work->data);
 
 	/* build hex string */
+#ifdef USE_KECCAK
+	hexstr = bin2hex(work->data, opt_keccak ? 80 : sizeof(work->data));
+#else
 	hexstr = bin2hex(work->data, sizeof(work->data));
+#endif
 
 	/* build JSON-RPC request */
 	if (work->gbt) {
@@ -3722,6 +3745,8 @@ static void rebuild_hash(struct work *work)
 {
 	if (opt_scrypt)
 		scrypt_regenhash(work);
+	else if (opt_keccak)
+		keccak_regenhash(work);
 	else
 		regen_hash(work);
 }
@@ -3986,37 +4011,19 @@ static void set_blockdiff(const struct work *work)
 {
 	uint64_t *data64, d64, diff64;
 	double previous_diff;
-	uint32_t diffhash[8];
-	uint32_t difficulty;
-	uint32_t diffbytes;
-	uint32_t diffvalue;
-	char rhash[32];
-	int diffshift;
-
-	difficulty = swab32(*((uint32_t *)(work->data + 72)));
-
-	diffbytes = ((difficulty >> 24) & 0xff) - 3;
-	diffvalue = difficulty & 0x00ffffff;
-
-	diffshift = (diffbytes % 4) * 8;
-	if (diffshift == 0) {
-		diffshift = 32;
-		diffbytes--;
-	}
-
-	memset(diffhash, 0, 32);
-	diffbytes >>= 2;
-	if (unlikely(diffbytes > 6))
-		return;
-	diffhash[diffbytes + 1] = diffvalue >> (32 - diffshift);
-	diffhash[diffbytes] = diffvalue << diffshift;
-
-	swab256(rhash, diffhash);
+	int bits_shift;
+	unsigned char bits[4], block_target[32];
+	
+	memset (block_target, 0x00, 32);
+	
+	bin_reverse(work->data + 72, bits, 4);
+	bits_shift = 32 - (int)bits[0];
+	memcpy(block_target + bits_shift, bits + 1, 3);
 
 	if (opt_scrypt)
-		data64 = (uint64_t *)(rhash + 2);
+		data64 = (uint64_t *)(block_target + 2);
 	else
-		data64 = (uint64_t *)(rhash + 4);
+		data64 = (uint64_t *)(block_target + 4);
 	d64 = bswap_64(*data64);
 	if (unlikely(!d64))
 		d64 = 1;
@@ -4356,6 +4363,9 @@ void write_config(FILE *fcfg)
 					break;
 				case KL_SCRYPT:
 					fprintf(fcfg, "scrypt");
+					break;
+				case KL_KECCAK:
+					fprintf(fcfg, "keccak");
 					break;
 			}
 		}

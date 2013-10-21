@@ -584,6 +584,15 @@ char *get_proxy(char *url, struct pool *pool)
 	return url;
 }
 
+void bin_reverse(unsigned char *in, unsigned char *out, int length)
+{
+	in += length - 1;
+	while(length-- > 0) {
+		*out = *in;
+		in--; out++;
+	}
+}
+
 /* Adequate size s==len*2 + 1 must be alloced to use this variant */
 void __bin2hex(char *s, const unsigned char *p, size_t len)
 {

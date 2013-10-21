@@ -116,6 +116,7 @@ CGMiner specific configuration options:
 	--enable-avalon         Compile support for Avalon (default disabled)
 	--enable-klondike       Compile support for Klondike (default disabled)
 	--enable-scrypt         Compile support for scrypt litecoin mining (default disabled)
+	--enable-keccak         Compile support for keccak copperlark mining (default disabled)
 	--without-curses        Compile support for curses TUI (default enabled)
 
 Basic *nix build instructions:
@@ -164,6 +165,7 @@ Options for both config file and command line:
 --failover-only     Don't leak work to backup pools when primary pool is lagging
 --fix-protocol      Do not redirect to a different getwork protocol (eg. stratum)
 --hotplug <arg>     Set hotplug check time to <arg> seconds (0=never default: 5) - only with libusb
+--keccak            Use the keccak algorithm for mining (copperlark only)
 --kernel-path|-K <arg> Specify a path to where bitstream and kernel files are (default: "/usr/local/bin")
 --load-balance      Change multipool strategy from failover to quota based balance
 --log|-l <arg>      Interval in seconds between log output (default: 5)
