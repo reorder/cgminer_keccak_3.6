@@ -3415,9 +3415,9 @@ static void roll_work(struct work *work)
 	uint32_t ntime;
 
 	work_ntime = (uint32_t *)(work->data + 68);
-	ntime = be32toh(*work_ntime);
+	ntime = le32toh(*work_ntime);
 	ntime++;
-	*work_ntime = htobe32(ntime);
+	*work_ntime = htole32(ntime);
 	local_work++;
 	work->rolls++;
 	work->blk.nonce = 0;
