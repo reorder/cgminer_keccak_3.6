@@ -1,3 +1,14 @@
+This is a modified cgminer software for Maxcoin stratum mining.
+
+Usage: cgminer --keccak -o stratum+tcp://maxpool.1gh.com:17333 -u YOUR-WALLET -p x
+
+Developed for MAX.1GH.COM pool by reorder.
+MAX: mdr5rGdv5mq4zniSZDb6FdWnhUjV71C5d9
+BTC: 1QCdQmJYUqJh4NJiPgU3LQzz3atvk58oL3
+
+
+Original copyright stack follows
+
 This is a multi-threaded multi-pool GPU, FPGA and ASIC miner with ATI GPU
 monitoring, (over)clocking and fanspeed support for bitcoin and derivative
 coins. Do not use on multiple block chains at the same time!
