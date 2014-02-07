@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <stdio.h>
+
 #define CL_SET_BLKARG(blkvar) status |= clSetKernelArg(*kernel, num++, sizeof(uint), (void *)&blk->blkvar)
 #define CL_SET_ARG(var) status |= clSetKernelArg(*kernel, num++, sizeof(var), (void *)&var)
 
@@ -306,41 +308,24 @@ void keccak1(unsigned char *out, const unsigned char *inraw, unsigned inrawlen)
 	}
 }
 
-static int crypto_hash( unsigned char *out, const unsigned char *in, unsigned inlen )
-{
-	keccak1(out, in, inlen);
-
-	return 0;
-}
-
-void Hash3(uint256 *pResult, unsigned char const *pbegin, unsigned char const *pend)
-{
-	uint256 hash1;
-/*	uint256 hash2;*/
-	crypto_hash((unsigned char*)&hash1, pbegin, (pend - pbegin) * sizeof(pbegin[0]));
-/*	crypto_hash((unsigned char*)&hash2, (unsigned char*)&hash1, sizeof(hash1)); */
-	*pResult = hash1;
-}
-
 void keccak_regenhash(struct work *work)
 {
 	uint256 result; 
 
     unsigned int data[20], datacopy[20]; // aligned for flip80
-    memcpy(datacopy, &work->data, 80);
+    memcpy(datacopy, work->data, 80);
     flip80(data, datacopy); 
-    crypto_hash(&result, (unsigned char*)data, 80);
+    keccak1((unsigned char*)&result, (unsigned char*)data, 80);
 
-/*	Hash3(&result, &work->data[0], &work->data[80]); */
 	memcpy(work->hash, &result, 32);
 }
 
 bool keccak_prepare_work(struct thr_info __maybe_unused *thr, struct work *work)
 {
     unsigned int src[20], dst[20]; // aligned for flip80
-    memcpy(src, &work->data[0], 80);
+    int i;
+    memcpy(src, work->data, 80);
     flip80(dst, src);
-    memcpy(&work->blk.keccak_data, dst, 80);
-//    flip80(&work->blk.keccak_data, &work->data);
+    memcpy(work->blk.keccak_data, dst, 80);
 	return true;
 }
