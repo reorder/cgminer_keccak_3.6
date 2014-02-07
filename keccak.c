@@ -316,21 +316,31 @@ static int crypto_hash( unsigned char *out, const unsigned char *in, unsigned in
 void Hash3(uint256 *pResult, unsigned char const *pbegin, unsigned char const *pend)
 {
 	uint256 hash1;
-	uint256 hash2;
+/*	uint256 hash2;*/
 	crypto_hash((unsigned char*)&hash1, pbegin, (pend - pbegin) * sizeof(pbegin[0]));
-	crypto_hash((unsigned char*)&hash2, (unsigned char*)&hash1, sizeof(hash1));
-	*pResult = hash2;
+/*	crypto_hash((unsigned char*)&hash2, (unsigned char*)&hash1, sizeof(hash1)); */
+	*pResult = hash1;
 }
 
 void keccak_regenhash(struct work *work)
 {
-	uint256 result;
-	Hash3(&result, &work->data[0], &work->data[80]);
+	uint256 result; 
+
+    unsigned int data[20];
+    flip80((unsigned char*)data, &work->data); 
+    crypto_hash(&result, (unsigned char*)data, 80);
+
+/*	Hash3(&result, &work->data[0], &work->data[80]); */
 	memcpy(work->hash, &result, 32);
 }
 
 bool keccak_prepare_work(struct thr_info __maybe_unused *thr, struct work *work)
 {
-	memcpy(&work->blk.keccak_data[0], &work->data[0], 80);
+//	memcpy(&work->blk.keccak_data[0], &work->data[0], 80);
+    unsigned int src[20], dst[20]; // for alignment
+    memcpy(src, &work->data[0], 80);
+    flip80(src, dst);
+    memcpy(&work->blk.keccak_data, dst, 80);
+//    flip80(&work->blk.keccak_data, &work->data);
 	return true;
 }
