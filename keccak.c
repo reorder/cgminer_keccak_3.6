@@ -326,8 +326,9 @@ void keccak_regenhash(struct work *work)
 {
 	uint256 result; 
 
-    unsigned int data[20];
-    flip80((unsigned char*)data, &work->data); 
+    unsigned int data[20], datacopy[20]; // aligned for flip80
+    memcpy(datacopy, &work->data, 80);
+    flip80(data, datacopy); 
     crypto_hash(&result, (unsigned char*)data, 80);
 
 /*	Hash3(&result, &work->data[0], &work->data[80]); */
@@ -336,9 +337,9 @@ void keccak_regenhash(struct work *work)
 
 bool keccak_prepare_work(struct thr_info __maybe_unused *thr, struct work *work)
 {
-    unsigned int src[20], dst[20]; // alignment
+    unsigned int src[20], dst[20]; // aligned for flip80
     memcpy(src, &work->data[0], 80);
-    flip80(src, dst);
+    flip80(dst, src);
     memcpy(&work->blk.keccak_data, dst, 80);
 //    flip80(&work->blk.keccak_data, &work->data);
 	return true;
