@@ -120,7 +120,7 @@ __kernel void search(__global const uint2*restrict in, __global uint*restrict ou
 #define FOUND (0x0F)
 #define SETFOUND(Xnonce) output[output[FOUND]++] = Xnonce
         
-        if (state3.y & 0x0FFFFFFF == 0)
+        if ((state3.y & 0xFFFFFFF0U) == 0)
         {
                 SETFOUND(get_global_id(0));
         }
