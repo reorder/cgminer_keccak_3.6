@@ -336,8 +336,7 @@ void keccak_regenhash(struct work *work)
 
 bool keccak_prepare_work(struct thr_info __maybe_unused *thr, struct work *work)
 {
-//	memcpy(&work->blk.keccak_data[0], &work->data[0], 80);
-    unsigned int src[20], dst[20]; // for alignment
+    unsigned int src[20], dst[20]; // alignment
     memcpy(src, &work->data[0], 80);
     flip80(src, dst);
     memcpy(&work->blk.keccak_data, dst, 80);
