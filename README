@@ -1,5 +1,8 @@
 This is a modified cgminer software for Maxcoin stratum mining.
 
+ATTENTION WINDOWS USERS
+*** Windows build is available for download on http://max.1gh.com page ***
+
 Usage: cgminer --keccak -o stratum+tcp://maxpool.1gh.com:17333 -u YOUR-WALLET -p x
 
 Developed for MAX.1GH.COM pool by reorder.
