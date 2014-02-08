@@ -2020,17 +2020,10 @@ static bool gbt_decode(struct pool *pool, json_t *res_val)
 
 static bool getwork_decode(json_t *res_val, struct work *work)
 {
-#ifdef USE_KECCAK
-	if (unlikely(!jobj_binary(res_val, "data", work->data, opt_keccak ? 80 : sizeof(work->data), true))) {
-		applog(LOG_ERR, "JSON inval data");
-		return false;
-	}
-#else
 	if (unlikely(!jobj_binary(res_val, "data", work->data, sizeof(work->data), true))) {
 		applog(LOG_ERR, "JSON inval data");
 		return false;
 	}
-#endif
 
 	if (!jobj_binary(res_val, "midstate", work->midstate, sizeof(work->midstate), false)) {
 		// Calculate it ourselves
