@@ -10,7 +10,7 @@ MAX: mdr5rGdv5mq4zniSZDb6FdWnhUjV71C5d9
 BTC: 1QCdQmJYUqJh4NJiPgU3LQzz3atvk58oL3
 
 How to build:
-sh autohen.sh
+sh autogen.sh
 ./configure --enable-keccak
 make
 
